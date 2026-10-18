@@ -16,7 +16,7 @@ There is no background system service and no sudoers modification.
 | Camera and notifications | User-owned JPEGs and bounded provider requests |
 | Application logs | Console and private rotating XDG state files; delivery results stay off warning windows |
 
-The helper receives only protection delays and physical shortcut codes. It never
+The helper receives only protection delays, the cursor-freeze setting, and physical shortcut codes. It never
 receives photo paths, webhook URLs, bot tokens, or commands to execute. Its shutdown
 command is fixed. Authentication runs in a short-lived subprocess so PAM cannot
 block input processing or heartbeat supervision.
@@ -36,10 +36,10 @@ This also covers cached or passwordless sudo authorization. Unlock repeats PAM
 authentication for that same user. PAM success without a password challenge does
 not count as password validation. Account restrictions are checked as well.
 
-Messages are newline-delimited JSON with protocol version 1 and a 32 KiB limit.
+Messages are newline-delimited JSON with protocol version 2 and a 32 KiB limit.
 Inherited stdin/stdout pipes are the only control channel. The root helper accepts
-no unauthenticated disarm request. Input events are translated inside the GUI;
-they are never reinjected into the compositor while protected. Passwords remain
+no unauthenticated disarm request. Keyboard events are translated inside the GUI
+and never reinjected into the compositor. Passwords remain
 transient; Python and Qt do not offer a guarantee that every temporary allocation
 can be erased from process memory.
 
@@ -47,7 +47,13 @@ can be erased from process memory.
 
 pyudev selects keyboard and pointer devices from the initiating user's active
 logind seat. evdev grabs every selected event device, and hotplug events update
-capture. Mouse motion and wheel events are discarded. Keys trigger on release;
+capture. Wheel events are discarded. With `freeze_cursor=false` (the default), a
+seat0 uinput pointer forwards only `REL_X`/`REL_Y` motion while `ARMED`. Physical
+clicks and keyboard input stay grabbed. Touchpad contacts become relative mouse
+motion; touch/button events are never forwarded, preventing synthesized desktop
+taps. The virtual device is excluded from capture and closed on release/failure.
+Motion is discarded in `FROZEN`/`AUTHENTICATING` or with cursor freezing enabled.
+Keys trigger on release;
 pointer buttons trigger on press. Key repeats do not trigger incidents. Shortcuts
 use physical key codes and equivalent left/right modifiers.
 

@@ -39,15 +39,23 @@ environments actually checked before treating a build as release-ready.
 1. Set the warning message, or leave it blank for the default.
 2. Keep or record a release shortcut with **1–3 simultaneous keys**. The default
    is **Ctrl+K**; left and right modifier keys are equivalent.
-3. Optionally enable shutdown, a camera photo, Discord, or Telegram.
+3. Optionally enable **Freeze cursor**, shutdown, a camera photo, Discord, or Telegram.
 4. Click **Activate**, enter your sudo password, and step away during the startup
    countdown. The default delay is **5 seconds**.
 5. To return, press the release shortcut and enter your sudo password again.
 
 While armed, the desktop stays visible. An unexpected key release or mouse
-button press triggers the warning. Mouse movement and scrolling do not trigger
-it. Captured input is consumed, so it cannot operate the applications underneath.
+button press triggers the warning. **Freeze cursor** is off by default, allowing
+pointer movement while armed. Enable it to keep the pointer still. Mouse movement
+and scrolling do not trigger an incident; clicks, scrolling, and keyboard events
+are consumed. The pointer is always blocked in the warning and password states.
 Ordinary close requests and desktop exit shortcuts are ignored during protection.
+
+Allowing pointer movement uses `/dev/uinput` on the local `seat0`. If it is
+unavailable, load the kernel module with `sudo modprobe uinput`, or enable
+**Freeze cursor**. Other seats currently require **Freeze cursor**. Touchpads
+are translated into virtual mouse motion, so desktop pointer acceleration may
+feel different. The virtual pointer is removed when protection stops.
 
 The warning covers every connected monitor, uses uppercase green text on black,
 and includes the camera photo if enabled. Each incident takes one photo and

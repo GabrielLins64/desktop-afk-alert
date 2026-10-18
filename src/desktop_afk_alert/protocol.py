@@ -3,7 +3,7 @@
 import json
 from enum import StrEnum
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 MAX_MESSAGE_BYTES = 32768
 HEARTBEAT_TIMEOUT = 5.0
 

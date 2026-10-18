@@ -49,6 +49,11 @@ each run. An implementation target is not a verified compatibility claim.
   A refused local connection exercised all three attempts while the warning
   remained visible without delivery notices. Console/file logging, URL/token
   redaction, log rotation, and `0600` file/backup permissions were checked.
+- The **Freeze cursor** control was visually checked, including its off default,
+  saved on value, and off fallback for older settings. Motion filtering was
+  inspected with synthetic mouse/touchpad events: only relative movement and
+  synchronization were emitted, and pending movement was discarded on freezing.
+  No host input grabs or kernel uinput devices were used for these checks.
 
 Containers were not given physical input devices, cameras, or desktop sessions.
 These checks do not validate exclusive capture, Wayland stacking, monitor/device
@@ -68,6 +73,13 @@ above must be completed before claiming a fully validated release.
 - Arm, move the mouse, and scroll: no incident. Release an unexpected key or
   press a mouse button: one incident, with no action in underlying applications.
   Check media keys and the pointer devices available on the target hardware.
+- Check **Freeze cursor**, initially off, with mouse and touchpad movement on
+  X11 and Wayland. Movement must work only in `ARMED` with the switch off; clicks
+  and scrolling must not reach underlying applications. Check that movement stops
+  immediately in `FROZEN`/`AUTHENTICATING`, and resumes after cancelling password
+  entry back to `ARMED`. Check hotplug and virtual-device cleanup. With `/dev/uinput`
+  unavailable or another seat selected, activation must give an actionable error
+  unless **Freeze cursor** is on. These kernel/compositor scenarios remain pending.
 - Record one-, two-, and three-key shortcuts; check modifier equivalence, partial
   presses while assembling a chord, held-key repeats, and consumed releases.
 - Release from both armed and frozen states. Check correct, wrong, empty, and

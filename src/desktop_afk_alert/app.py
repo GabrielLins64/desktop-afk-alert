@@ -150,7 +150,7 @@ class Controller(QObject):
         self.window.badge.setText("AUTHENTICATING")
         self.window.status.setText("Checking administrator permissions and password…")
         self.persist(settings, credentials)
-        configuration = {"startup_delay": settings.startup_delay, "shutdown_enabled": settings.shutdown_enabled, "shutdown_delay": settings.shutdown_delay, "release_shortcut": settings.release_shortcut}
+        configuration = {"startup_delay": settings.startup_delay, "shutdown_enabled": settings.shutdown_enabled, "shutdown_delay": settings.shutdown_delay, "release_shortcut": settings.release_shortcut, "freeze_cursor": settings.freeze_cursor}
         self.client.start(helper, session, password, configuration)
         password = ""
 

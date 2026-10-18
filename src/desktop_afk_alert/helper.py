@@ -142,12 +142,13 @@ class Helper:
         startup = message.get("startup_delay")
         delay = message.get("shutdown_delay")
         enabled = message.get("shutdown_enabled")
-        if type(startup) is not int or not 0 <= startup <= 86400 or type(delay) is not int or not 1 <= delay <= 86400 or type(enabled) is not bool:
+        freeze_cursor = message.get("freeze_cursor", False)
+        if type(startup) is not int or not 0 <= startup <= 86400 or type(delay) is not int or not 1 <= delay <= 86400 or type(enabled) is not bool or type(freeze_cursor) is not bool:
             raise ValueError("Invalid protection configuration.")
         shortcut = validate_shortcut(message.get("release_shortcut"))
         seat = self.check_session()
-        self.capture = InputCapture(self.selector, seat)
-        self.settings = {"startup_delay": startup, "shutdown_delay": delay, "shutdown_enabled": enabled}
+        self.capture = InputCapture(self.selector, seat, freeze_cursor=freeze_cursor)
+        self.settings = {"startup_delay": startup, "shutdown_delay": delay, "shutdown_enabled": enabled, "freeze_cursor": freeze_cursor}
         self.shortcut = set(shortcut)
         self.send("configured")
 
@@ -234,6 +235,7 @@ class Helper:
             raise RuntimeError("Input synchronization was lost. Protection has been stopped.")
         if self.capture.pointer_click(path, event):
             self.freeze("pointer click")
+        self.capture.forward_motion(path, event, enabled=self.state == State.ARMED)
         if event.type != ecodes.EV_KEY:
             return
         before = self.capture.held()

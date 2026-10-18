@@ -103,6 +103,9 @@ class SettingsWindow(QMainWindow):
         protection.addWidget(label("Required to disarm. Your sudo password is also required.", "muted", True))
         self.register_error(protection, "release_shortcut", self.shortcut)
 
+        self.freeze_cursor_switch = self.switch_row(protection, "Freeze cursor", "Keep the pointer still while armed. Clicks still trigger the warning.", settings.freeze_cursor)
+        self.register_error(protection, "freeze_cursor", self.freeze_cursor_switch)
+
         self.shutdown_switch = self.switch_row(protection, "Shut down computer", "Start a shutdown countdown when unexpected input is detected.", settings.shutdown_enabled)
         shutdown_row = QHBoxLayout()
         self.shutdown_label = label("Shutdown delay")
@@ -308,6 +311,7 @@ class SettingsWindow(QMainWindow):
             shutdown_delay=self.shutdown_delay.value(), photo_enabled=self.photo_switch.isChecked(),
             camera_id=self.camera.currentData() or "", photo_directory=self.directory.text().strip(),
             startup_delay=self.startup.value(), release_shortcut=self.release_shortcut.copy(),
+            freeze_cursor=self.freeze_cursor_switch.isChecked(),
             discord_enabled=self.discord_switch.isChecked(), telegram_enabled=self.telegram_switch.isChecked(),
             telegram_chat_id=self.chat_id.text().strip(),
         )

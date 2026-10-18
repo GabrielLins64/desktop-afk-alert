@@ -7,11 +7,15 @@ import evdev
 import pyudev
 from evdev import ecodes
 
+from desktop_afk_alert.pointer import PointerMotion
+
 
 class InputCapture:
-    def __init__(self, selector: selectors.BaseSelector, seat: str):
+    def __init__(self, selector: selectors.BaseSelector, seat: str, freeze_cursor: bool = False):
         self.selector = selector
         self.seat = seat
+        self.freeze_cursor = freeze_cursor
+        self.motion = None
         self.context = pyudev.Context()
         self.monitor = pyudev.Monitor.from_netlink(self.context)
         self.monitor.filter_by(subsystem="input")
@@ -27,6 +31,8 @@ class InputCapture:
         self.active = False
 
     def eligible(self, device: pyudev.Device) -> bool:
+        if self.motion is not None and device.device_node == self.motion.path:
+            return False
         if not device.device_node or not device.device_node.startswith("/dev/input/event"):
             return False
         if device.properties.get("ID_SEAT", "seat0") != self.seat:
@@ -59,6 +65,8 @@ class InputCapture:
                 info = absolute.get(axis) or absolute.get(alternative)
                 thresholds.append(max(10, info.resolution * 3 if info and info.resolution else (info.max - info.min) * 0.02 if info else 10))
             self.tap_thresholds[path] = thresholds
+            if self.motion is not None:
+                self.motion.add(path, handle, self.kinds[path])
         except OSError as error:
             handle.close()
             if isinstance(error, BlockingIOError):
@@ -76,6 +84,13 @@ class InputCapture:
         try:
             for device in candidates:
                 self._add(device)
+            if not self.freeze_cursor:
+                try:
+                    self.motion = PointerMotion(self.seat)
+                except OSError:
+                    raise RuntimeError("Cursor movement needs /dev/uinput. Run sudo modprobe uinput, or enable Freeze cursor.") from None
+                for path, device in self.devices.items():
+                    self.motion.add(path, device, self.kinds[path])
         except BlockingIOError:
             self.release()
             return False
@@ -104,6 +119,8 @@ class InputCapture:
         self.positions.pop(path, None)
         self.taps.pop(path, None)
         self.tap_thresholds.pop(path, None)
+        if self.motion is not None:
+            self.motion.remove(path)
         self.removed_keys.update(previously_held - self.held())
         if handle is not None:
             try:
@@ -140,6 +157,10 @@ class InputCapture:
         elif value == 0:
             keys.discard(code)
 
+    def forward_motion(self, path: str, event, enabled: bool):
+        if self.motion is not None:
+            self.motion.process(path, event, enabled)
+
     def pointer_click(self, path: str, event) -> bool:
         kind = self.kinds.get(path)
         if event.type == ecodes.EV_ABS and kind == "touchpad":
@@ -175,6 +196,9 @@ class InputCapture:
         self.active = False
         for path in list(self.devices):
             self.remove(path)
+        motion, self.motion = self.motion, None
+        if motion is not None:
+            motion.close()
 
     def close(self) -> None:
         self.release()

@@ -24,6 +24,7 @@ class Settings:
     camera_id: str = ""
     photo_directory: str = ""
     startup_delay: int = 5
+    freeze_cursor: bool = False
     release_shortcut: list[int] = field(default_factory=lambda: DEFAULT_SHORTCUT.copy())
     discord_enabled: bool = False
     telegram_enabled: bool = False
@@ -149,6 +150,8 @@ def validate_settings(settings: Settings, credentials: Credentials, cameras: set
         errors["release_shortcut"] = str(error)
     if not 0 <= settings.startup_delay <= 86400:
         errors["startup_delay"] = "Enter a delay between 0 and 86,400 seconds."
+    if type(settings.freeze_cursor) is not bool:
+        errors["freeze_cursor"] = "Choose whether the cursor should stay frozen while armed."
     if settings.shutdown_enabled and not 1 <= settings.shutdown_delay <= 86400:
         errors["shutdown_delay"] = "Enter a delay between 1 and 86,400 seconds."
     if settings.photo_enabled:
