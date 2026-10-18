@@ -9,6 +9,7 @@ if [[ "$EUID" -eq 0 ]]; then
     exit 1
 fi
 
+/usr/bin/python3 -I scripts/install_helper.py --check
 uv build --wheel
 mkdir -p build
 uv export --frozen --only-group helper --no-emit-project --no-hashes --output-file build/helper-requirements.txt

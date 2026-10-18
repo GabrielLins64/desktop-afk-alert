@@ -29,6 +29,9 @@ each run. An implementation target is not a verified compatibility claim.
 - Correct and incorrect passwords were accepted/rejected by the real `sudo` PAM
   service using a temporary Ubuntu container account. The source helper installer
   and its relocated, root-owned Python environment were also exercised.
+- On Fedora 41, the source installer detected missing system Python headers,
+  compiler, and Linux input headers before installation. After installing the
+  suggested packages, `evdev` compiled and the installed helper launched successfully.
 - On the GNOME/X11 development host, read-only diagnostics identified the
   Brazilian keyboard layout and camera. Desktop idle/suspend inhibition was
   acquired and released without activating protection.

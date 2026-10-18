@@ -94,12 +94,12 @@ then install the native libraries and compiler:
 
 ```bash
 # Ubuntu 24.04
-sudo apt install python3-dev python3-venv build-essential libffi-dev libwayland-dev \
+sudo apt install python3-dev python3-venv build-essential linux-libc-dev libffi-dev libwayland-dev \
   libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-shape0 libxrandr2 libegl1 libgl1 libdbus-1-3 \
   libasound2t64 libgssapi-krb5-2 xdg-desktop-portal
 
 # Fedora
-sudo dnf install python3-devel python3-pip gcc libffi-devel wayland-devel \
+sudo dnf install python3-devel python3-pip gcc kernel-headers libffi-devel wayland-devel \
   libxkbcommon libxkbcommon-x11 xcb-util-cursor mesa-libGL mesa-libEGL \
   dbus-libs krb5-libs libXrandr xdg-desktop-portal
 ```
@@ -113,7 +113,10 @@ uv run desktop-afk-alert
 ```
 
 The helper installer asks for sudo and copies the wheel and only its two helper
-dependencies into root-owned storage under `/usr/local`. It does not import the
+dependencies into root-owned storage under `/usr/local`. It uses `/usr/bin/python3`,
+which also needs to be Python 3.11+, and checks its development headers and compiler
+before requesting sudo. Installing Python through uv does not provide the system
+headers needed to compile `evdev`. It does not import the
 checkout as root. Re-run it after changing helper code. Distribution packages use
 `/usr/libexec/desktop-afk-alert-helper` and take precedence over a development
 helper. Disarm and close the application before replacing either installation.
@@ -156,6 +159,11 @@ installers and checksums. Review the manual validation matrix before publishing.
 
 ## Troubleshooting and limits
 
+- **Helper installation reports missing `Python.h`:** install the headers for
+  `/usr/bin/python3`: `sudo dnf install python3-devel` on Fedora, or
+  `sudo apt install python3-dev` on Ubuntu. Then re-run
+  `scripts/install-dev-helper.sh`. Headers from uv or another virtual environment
+  cannot replace the system Python headers used by the helper.
 - **Cannot activate:** run `--diagnose`; check that the helper is installed and
   the session is local, active, and unlocked. Install the matching GNOME or KDE
   desktop portal. The application refuses to arm when essential preflight checks
