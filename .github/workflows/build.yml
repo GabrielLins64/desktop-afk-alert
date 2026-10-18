@@ -41,6 +41,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-afk-alert-linux-x86_64
+          retention-days: 7
           path: |
             dist/*.deb
             dist/*.rpm
@@ -49,6 +50,7 @@ jobs:
         if: always()
         with:
           name: compilation-reports
+          retention-days: 7
           path: build/*-report.xml
           if-no-files-found: ignore
 

@@ -177,9 +177,11 @@ Nuitka produces separate standalone GUI and helper directories under `build/`.
 nFPM writes `.deb`, `.rpm`, and `SHA256SUMS` files under `dist/`. Dependencies are
 locked in `uv.lock`. `BUILD_JOBS=4 scripts/build.sh` changes compilation parallelism.
 
-The GitHub Actions workflow builds packages on manual dispatch. A `v0.1.0`-style
-tag matching the package version also creates a **draft** release with both
-installers and checksums. Review the manual validation matrix before publishing.
+The GitHub Actions workflow builds both packages and checksums on manual dispatch.
+A `v0.1.0`-style tag matching the package version also creates a **draft** release
+with both installers and checksums. Workflow artifacts and compilation reports
+expire after seven days; files attached to a release are retained separately.
+Review the manual validation matrix before publishing.
 
 ## Troubleshooting and limits
 
