@@ -32,6 +32,9 @@ QLineEdit[invalid="true"], QPlainTextEdit[invalid="true"], QComboBox[invalid="tr
 QComboBox::drop-down { border: 0; width: 26px; }
 QComboBox QAbstractItemView { background: #101A14; color: #D9FFE6; selection-background-color: #003B00; padding: 4px; }
 QSpinBox { min-width: 105px; }
+QSpinBox QLineEdit { background: transparent; border: 0; padding: 0 11px; }
+/* Hide buttons through styling so Qt preserves the spin box editor's width. */
+QSpinBox::up-button, QSpinBox::down-button { width: 0; border: 0; }
 QPushButton {
     background: #192E20; color: #BCF2CD; border: 1px solid #31543D;
     border-radius: 7px; padding: 9px 15px; font-weight: bold;

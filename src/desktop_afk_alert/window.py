@@ -256,7 +256,6 @@ class SettingsWindow(QMainWindow):
         spin.setRange(minimum, 86400)
         spin.setValue(value)
         spin.setSuffix(" s")
-        spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         spin.setToolTip("Type seconds, or use the arrow keys.")
         return spin
 
