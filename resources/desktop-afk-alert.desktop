@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Desktop AFK Alert
+Comment=Keep your desktop visible. Warn unexpected visitors.
+Exec=desktop-afk-alert
+Icon=desktop-afk-alert
+Terminal=false
+Categories=Utility;Security;Qt;
+Keywords=AFK;alert;desktop;camera;
+StartupNotify=true
+StartupWMClass=desktop-afk-alert

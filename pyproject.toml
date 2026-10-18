@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "desktop-afk-alert"
+version = "0.1.0"
+description = "Keep your desktop visible. Warn unexpected visitors."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "desktop-afk-alert contributors" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: X11 Applications :: Qt",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: Desktop Environment",
+]
+dependencies = [
+  "PySide6-Essentials>=6.8,<7",
+  "PySide6-Addons>=6.8,<7",
+  "evdev>=1.9,<2",
+  "pyudev>=0.24,<1",
+  "httpx>=0.28,<1",
+  "keyring>=25,<27",
+  "SecretStorage>=3.3,<4",
+  "pywayland>=0.4.18,<1",
+  "jeepney>=0.9,<1",
+]
+
+[project.gui-scripts]
+desktop-afk-alert = "desktop_afk_alert.app:main"
+
+[dependency-groups]
+build = ["Nuitka>=2.7,<5", "ordered-set>=4,<5", "zstandard>=0.23,<1", "patchelf>=0.17,<1"]
+helper = ["evdev>=1.9,<2", "pyudev>=0.24,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/desktop_afk_alert"]
+force-include = { "resources/desktop-afk-alert.svg" = "desktop_afk_alert/icon.svg" }

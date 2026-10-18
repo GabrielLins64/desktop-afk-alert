@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /opt/desktop-afk-alert/helper/desktop-afk-alert-helper.bin "$@"
