@@ -279,7 +279,10 @@ class Controller(QObject):
         self.window.set_busy(False)
         self.window.badge.setText("READY")
         self.window.status.setText(message)
-        self.window.show()
+        if self.window.isMinimized():
+            self.window.showNormal()
+        else:
+            self.window.show()
         self.window.raise_()
         self.window.activateWindow()
 
