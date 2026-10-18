@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import logging
 import math
 import os
 import sys
@@ -17,12 +18,15 @@ from desktop_afk_alert.camera import CameraCapture, cameras
 from desktop_afk_alert.client import HelperClient, installed_helper
 from desktop_afk_alert.config import config_path, load_settings, save_credentials, save_settings, validate_settings
 from desktop_afk_alert.keyboard import NativeKeyboard
+from desktop_afk_alert.logging_setup import configure_logging, log_path
 from desktop_afk_alert.notifications import Incident, Notifications
 from desktop_afk_alert.overlays import Overlays
 from desktop_afk_alert.protocol import State
 from desktop_afk_alert.session import SessionInhibitor, current_session
 from desktop_afk_alert.theme import STYLESHEET
 from desktop_afk_alert.window import SettingsWindow
+
+logger = logging.getLogger(__name__)
 
 
 class Controller(QObject):
@@ -59,7 +63,6 @@ class Controller(QObject):
         self.overlays.submitted.connect(self.authenticate)
         self.overlays.cancelled.connect(lambda: self.client.send("cancel_auth"))
         self.camera.completed.connect(self.photo_ready)
-        self.notifications.delivered.connect(self.delivery_finished)
         self.credentials_saved.connect(self._saved)
         self.application.aboutToQuit.connect(self.cleanup)
 
@@ -238,14 +241,8 @@ class Controller(QObject):
         if path and self.incident is incident and self.overlays.visible:
             self.overlays.set_photo(path)
         if error:
-            self.notice = error
-            self.window.status.setText(error)
+            logger.warning("Camera capture for incident %s: %s", incident.identifier, error)
         self.notifications.send(settings, credentials, incident, path)
-
-    def delivery_finished(self, provider, message):
-        self.notice = f"{provider}: {message}"
-        if self.state == State.IDLE:
-            self.window.status.setText(self.notice)
 
     def authenticate(self, password: str):
         self.client.send("authenticate", password=password)
@@ -309,12 +306,12 @@ class Controller(QObject):
             self.keyboard = None
 
     def exception_hook(self, exception_type, _exception, _traceback):
-        print(f"Desktop AFK Alert stopped after an internal {exception_type.__name__}. No request data was logged.", file=sys.stderr)
+        logger.error("Protection stopped after an internal %s. No request data was logged.", exception_type.__name__)
         self.abort("An internal error stopped protection. Input devices are being released; restart the application before activating again.")
 
 
 def diagnose(application: QApplication) -> int:
-    report = {"version": __version__, "qt_platform": application.platformName(), "configuration": str(config_path())}
+    report = {"version": __version__, "qt_platform": application.platformName(), "configuration": str(config_path()), "log_file": str(log_path())}
     okay = True
     try:
         report["helper"] = installed_helper()
@@ -351,6 +348,7 @@ def main() -> int:
     if arguments.camera_worker:
         from desktop_afk_alert.camera_worker import main as camera_main
         return camera_main()
+    configure_logging()
     application = QApplication([sys.argv[0]])
     application.setApplicationName("desktop-afk-alert")
     application.setApplicationDisplayName("Desktop AFK Alert")

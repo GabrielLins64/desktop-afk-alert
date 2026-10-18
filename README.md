@@ -90,6 +90,19 @@ the system keyring. If the keyring is unavailable, newly entered credentials sta
 in memory for the current run. Sudo passwords are never saved. Photos and new
 settings files are private to your user.
 
+### Logs
+
+Application and notification results are written to the console and
+`~/.local/state/desktop-afk-alert/logs/desktop-afk-alert.log`. If `XDG_STATE_HOME`
+is set, it replaces `~/.local/state`. Logs are private to your user and rotate at
+1 MiB, keeping three backups. If the file cannot be opened, console logging
+continues.
+
+Delivery failures stay in the logs and do not appear on the frozen screen. Logs
+include the provider, incident ID, HTTP status/error code, and retry attempts;
+webhook URLs, bot tokens, passwords, and notification bodies are excluded.
+`--diagnose` also reports the log file location.
+
 ## Run from source
 
 Install Python 3.11+ and [uv](https://docs.astral.sh/uv/getting-started/installation/),
@@ -162,6 +175,11 @@ installers and checksums. Review the manual validation matrix before publishing.
 
 ## Troubleshooting and limits
 
+- **An alert was not delivered:** check the log file above. Connection failures
+  include their error type; provider rejections include HTTP and API error codes.
+  For Discord, check that the webhook still exists and has access to the channel.
+  Forum/media channels also need a `thread_id` in the webhook URL. Delivery uses
+  at most three attempts and never stops protection.
 - **Helper installation reports missing `Python.h`:** install the headers for
   `/usr/bin/python3`: `sudo dnf install python3-devel` on Fedora, or
   `sudo apt install python3-dev` on Ubuntu. Then re-run

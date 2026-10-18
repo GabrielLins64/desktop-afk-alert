@@ -42,10 +42,17 @@ each run. An implementation target is not a verified compatibility claim.
   local comparison; lighting and camera results vary.
   Force-stopping the camera worker also left the warning visible in `FROZEN`
   and reported a photo failure without stopping the interface.
+- Discord text and synthetic-image delivery passed against an explicitly
+  authorized webhook from the GUI's background delivery flow (HTTP 200).
+  First-use TLS initialization in the delivery thread reproduced an `SSLError`;
+  creating and reusing the verified TLS context on the GUI thread resolved it.
+  A refused local connection exercised all three attempts while the warning
+  remained visible without delivery notices. Console/file logging, URL/token
+  redaction, log rotation, and `0600` file/backup permissions were checked.
 
 Containers were not given physical input devices, cameras, or desktop sessions.
 These checks do not validate exclusive capture, Wayland stacking, monitor/device
-changes, real provider delivery, or shutdown. The pending desktop VM scenarios
+changes, Telegram delivery, or shutdown. The pending desktop VM scenarios
 above must be completed before claiming a fully validated release.
 
 ## Scenarios

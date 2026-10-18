@@ -14,6 +14,7 @@ There is no background system service and no sudoers modification.
 | Session inhibitor | Desktop portal request scoped to a dedicated bus connection |
 | Helper | Authoritative state, exclusive device capture, PAM, monotonic deadlines |
 | Camera and notifications | User-owned JPEGs and bounded provider requests |
+| Application logs | Console and private rotating XDG state files; delivery results stay off warning windows |
 
 The helper receives only protection delays and physical shortcut codes. It never
 receives photo paths, webhook URLs, bot tokens, or commands to execute. Its shutdown
