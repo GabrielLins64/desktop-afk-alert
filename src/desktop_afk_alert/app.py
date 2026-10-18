@@ -199,7 +199,11 @@ class Controller(QObject):
             self.window.status.setText(detail or f"Arming in {remaining} seconds. Step away from your keyboard and mouse.")
         elif state in {State.ARMED, State.FROZEN, State.AUTHENTICATING}:
             self.window.set_busy(True)
-            self.window.hide()
+            if state == State.ARMED:
+                if previous != State.ARMED:
+                    self.window.showMinimized()
+            else:
+                self.window.hide()
             if previous == State.AUTHENTICATING and state != State.AUTHENTICATING:
                 self.overlays.end_auth(state == State.FROZEN)
             if state == State.FROZEN and not self.overlays.visible:
