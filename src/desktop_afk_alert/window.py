@@ -4,7 +4,7 @@ import threading
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import QStandardPaths, Qt, Signal
+from PySide6.QtCore import QStandardPaths, QTimer, Qt, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtMultimedia import QMediaDevices
 from PySide6.QtWidgets import (
@@ -45,9 +45,10 @@ class SettingsWindow(QMainWindow):
         self.fields = {}
         self.setWindowTitle("Desktop AFK Alert")
         self.setWindowIcon(icon)
-        self.setMinimumSize(650, 570)
+        self.setMinimumSize(488, 428)
         available = self.screen().availableGeometry()
-        self.resize(min(950, available.width() - 60), min(900, available.height() - 70))
+        self.resize(round(min(950, available.width() - 60) * 0.75), round(min(900, available.height() - 70) * 0.75))
+        self._center_on_first_show = True
         root = QWidget()
         self.setCentralWidget(root)
         outer = QVBoxLayout(root)
@@ -199,6 +200,17 @@ class SettingsWindow(QMainWindow):
         footer_layout.addWidget(self.activate)
         outer.addWidget(footer)
         self.credentials_loaded.connect(self._credentials_loaded)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._center_on_first_show:
+            self._center_on_first_show = False
+            QTimer.singleShot(0, self._center_on_screen)
+
+    def _center_on_screen(self):
+        frame = self.frameGeometry()
+        frame.moveCenter(self.screen().availableGeometry().center())
+        self.move(frame.topLeft())
 
     def card(self, body, eyebrow: str, title: str):
         frame = QFrame()
