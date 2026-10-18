@@ -35,6 +35,13 @@ each run. An implementation target is not a verified compatibility claim.
 - On the GNOME/X11 development host, read-only diagnostics identified the
   Brazilian keyboard layout and camera. Desktop idle/suspend inhibition was
   acquired and released without activating protection.
+- A real UVC camera capture was exercised with warning windows on a virtual X11
+  display, without input grabs or shutdown. The JPEG was saved with mode `0600`
+  and displayed while the interface stayed in `FROZEN`. Waiting two seconds after
+  the first frame increased mean image luminance from 3.5 to 29.0 (0–255) in a
+  local comparison; lighting and camera results vary.
+  Force-stopping the camera worker also left the warning visible in `FROZEN`
+  and reported a photo failure without stopping the interface.
 
 Containers were not given physical input devices, cameras, or desktop sessions.
 These checks do not validate exclusive capture, Wayland stacking, monitor/device

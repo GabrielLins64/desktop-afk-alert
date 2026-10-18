@@ -339,6 +339,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Keep your desktop visible. Warn unexpected visitors.")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--diagnose", action="store_true", help="Read environment information without capturing input or activating protection")
+    parser.add_argument("--camera-worker", action="store_true", help=argparse.SUPPRESS)
     arguments = parser.parse_args()
     if not sys.platform.startswith("linux"):
         print("Desktop AFK Alert currently supports Linux only.", file=sys.stderr)
@@ -347,6 +348,9 @@ def main() -> int:
         print("Run the application as your normal desktop user. Only its helper runs as root.", file=sys.stderr)
         return 1
     os.umask(0o077)
+    if arguments.camera_worker:
+        from desktop_afk_alert.camera_worker import main as camera_main
+        return camera_main()
     application = QApplication([sys.argv[0]])
     application.setApplicationName("desktop-afk-alert")
     application.setApplicationDisplayName("Desktop AFK Alert")

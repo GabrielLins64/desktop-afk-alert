@@ -1,11 +1,14 @@
-"""One asynchronous, time-bounded camera snapshot per incident."""
+"""Time-bounded camera capture isolated from the protection interface."""
 
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QTimer, Signal
-from PySide6.QtMultimedia import QCamera, QImageCapture, QMediaCaptureSession, QMediaDevices, QVideoSink
+from PySide6.QtCore import QObject, QProcess, QTimer, Signal
+from PySide6.QtMultimedia import QMediaDevices
+
+from desktop_afk_alert.protocol import MAX_MESSAGE_BYTES, decode, encode
 
 
 def cameras() -> dict[str, object]:
@@ -17,12 +20,9 @@ class CameraCapture(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.camera = None
-        self.session = None
-        self.capture = None
-        self.sink = None
-        self.requested = False
+        self.process = None
         self.path = ""
+        self.buffer = bytearray()
         self.generation = 0
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
@@ -31,54 +31,65 @@ class CameraCapture(QObject):
     def take(self, camera_id: str, directory: str, incident_id: str):
         self.cancel()
         generation = self.generation
-        available = cameras()
-        device = available.get(camera_id)
-        if device is None:
-            self.completed.emit(None, "The selected camera is unavailable. Sending a text-only alert.")
-            return
         try:
-            folder = Path(directory).expanduser()
+            folder = Path(directory).expanduser().resolve()
             folder.mkdir(parents=True, exist_ok=True, mode=0o700)
             filename = datetime.now().astimezone().strftime("%Y-%m-%d_%H-%M-%S_%z") + "_" + incident_id + ".jpg"
             self.path = str(folder / filename)
-            self.camera = QCamera(device, self)
-            self.session = QMediaCaptureSession(self)
-            self.capture = QImageCapture(self)
-            self.capture.setFileFormat(QImageCapture.FileFormat.JPEG)
-            self.capture.setQuality(QImageCapture.Quality.HighQuality)
-            self.sink = QVideoSink(self)
-            self.session.setCamera(self.camera)
-            self.session.setImageCapture(self.capture)
-            self.session.setVideoSink(self.sink)
-            self.requested = False
-            self.capture.readyForCaptureChanged.connect(lambda ready: self._ready(ready, generation))
-            self.capture.imageSaved.connect(lambda _identifier, path: self._saved(path, generation))
-            self.capture.errorOccurred.connect(lambda *_args: self._error(generation))
-            self.camera.errorOccurred.connect(lambda *_args: self._error(generation))
+            process = QProcess(self)
+            self.process = process
+            request = encode("capture", camera_id=camera_id, path=self.path)
+            process.started.connect(lambda: self._started(process, request, generation))
+            process.readyReadStandardOutput.connect(lambda: self._read(process, generation))
+            process.readyReadStandardError.connect(lambda: process.readAllStandardError())
+            process.errorOccurred.connect(lambda error: self._error(process, error, generation))
+            process.finished.connect(lambda *_args: self._ended(process, generation))
+            arguments = ["--camera-worker"]
+            if "__compiled__" not in globals() and not getattr(sys, "frozen", False):
+                arguments = ["-m", "desktop_afk_alert", *arguments]
             self.timer.start(5000)
-            self.camera.start()
-            self._ready(self.capture.isReadyForCapture(), generation)
-        except (OSError, RuntimeError):
+            process.start(sys.executable, arguments)
+        except (OSError, RuntimeError, ValueError):
             self._finish(None, "Could not open the camera or photo directory. Sending a text-only alert.")
 
-    def _ready(self, ready: bool, generation: int):
-        if generation == self.generation and ready and not self.requested and self.capture is not None:
-            self.requested = True
-            if self.capture.captureToFile(self.path) < 0:
-                self._error(generation)
+    def _started(self, process, request: bytes, generation: int):
+        if generation == self.generation:
+            process.write(request)
+            process.closeWriteChannel()
 
-    def _saved(self, path: str, generation: int):
+    def _read(self, process, generation: int):
         if generation != self.generation:
             return
+        self.buffer.extend(bytes(process.readAllStandardOutput()))
+        if len(self.buffer) > MAX_MESSAGE_BYTES:
+            self._finish(None, "The camera returned an invalid response. Sending a text-only alert.")
+            return
+        if b"\n" not in self.buffer:
+            return
+        line, _separator, _remainder = self.buffer.partition(b"\n")
         try:
-            os.chmod(path, 0o600)
-            self._finish(path, "")
-        except OSError:
-            self._finish(None, "The camera photo could not be saved privately. Sending a text-only alert.")
+            result = decode(bytes(line))
+            path, error = result.get("path"), result.get("error", "")
+            if result["type"] != "photo" or (path is not None and path != self.path) or not isinstance(error, str):
+                raise ValueError("Invalid camera response.")
+            if path:
+                os.chmod(path, 0o600)
+        except (OSError, ValueError, TypeError, KeyError):
+            self._finish(None, "The camera photo could not be read or saved privately. Sending a text-only alert.")
+            return
+        self._finish(path, error)
 
-    def _error(self, generation: int):
+    def _error(self, process, error, generation: int):
+        if generation == self.generation and error == QProcess.ProcessError.FailedToStart:
+            self._finish(None, "Could not start camera capture. Sending a text-only alert.")
+            process.deleteLater()
+
+    def _ended(self, process, generation: int):
         if generation == self.generation:
-            self._finish(None, "Camera capture failed. Check camera permissions and whether another application is using it.")
+            self._read(process, generation)
+            if generation == self.generation:
+                self._finish(None, "Camera capture stopped unexpectedly. Protection remains active; sending a text-only alert.")
+        process.deleteLater()
 
     def _finish(self, path, error: str):
         self.cancel()
@@ -87,13 +98,7 @@ class CameraCapture(QObject):
     def cancel(self):
         self.generation += 1
         self.timer.stop()
-        if self.camera is not None:
-            self.camera.stop()
-        if self.session is not None:
-            self.session.setCamera(None)
-            self.session.setImageCapture(None)
-            self.session.setVideoSink(None)
-        for item in (self.capture, self.camera, self.sink, self.session):
-            if item is not None:
-                item.deleteLater()
-        self.camera = self.capture = self.sink = self.session = None
+        self.buffer.clear()
+        process, self.process = self.process, None
+        if process is not None and process.state() != QProcess.ProcessState.NotRunning:
+            process.kill()
