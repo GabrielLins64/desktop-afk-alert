@@ -42,6 +42,16 @@ each run. An implementation target is not a verified compatibility claim.
   local comparison; lighting and camera results vary.
   Force-stopping the camera worker also left the warning visible in `FROZEN`
   and reported a photo failure without stopping the interface.
+- On the Arch Linux development host, a black-camera regression was traced to
+  Qt's V4L2 exposure setters leaving the UVC camera in manual mode at its minimum
+  exposure time. After removing those calls and restoring the device's automatic
+  exposure once, three local captures with system Qt 6.12.0 and two with Qt 6.8.3
+  produced nonblack `0600` JPEGs. Workers exited normally, automatic exposure
+  remained enabled, and a separate FFmpeg capture succeeded without rebooting.
+  An unavailable camera and an unwritable photo directory returned bounded
+  text-only failures through the normal worker completion flow.
+  Temporary photos were removed. The Qt 6.8.3 run used an isolated Python 3.12
+  environment on Arch; it does not replace a Fedora desktop validation run.
 - Discord text and synthetic-image delivery passed against an explicitly
   authorized webhook from the GUI's background delivery flow (HTTP 200).
   First-use TLS initialization in the delivery thread reproduced an `SSLError`;
@@ -97,6 +107,10 @@ above must be completed before claiming a fully validated release.
 - Capture a camera photo. Check its private permissions and unique name. Repeat
   with a busy/disconnected camera and an unwritable directory: protection and
   text-only notifications must continue without waiting indefinitely.
+  On V4L2 cameras, compare exposure mode/time before and after capture: automatic
+  exposure must stay enabled if it was enabled initially. Repeat captures, then
+  open the camera in another application without rebooting. Check that the worker
+  exits normally after releasing the camera, rather than being killed on success.
 - Check Discord, Telegram, and both together, with and without photos. Verify
   long messages, disabled Discord mentions, invalid credentials, offline
   connections, rate limits, retries, and independent provider failures.

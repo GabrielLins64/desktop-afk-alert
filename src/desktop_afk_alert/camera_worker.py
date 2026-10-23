@@ -54,10 +54,8 @@ class Snapshot(QObject):
             self.capture.errorOccurred.connect(self._error)
             self.camera.errorOccurred.connect(self._error)
             self.sink.videoFrameChanged.connect(self._frame)
-            if self.camera.isExposureModeSupported(QCamera.ExposureMode.ExposureAuto):
-                self.camera.setExposureMode(QCamera.ExposureMode.ExposureAuto)
-            if self.camera.supportedFeatures() & QCamera.Feature.ManualExposureTime:
-                self.camera.setAutoExposureTime()
+            # Preserve device exposure settings: Qt's V4L2 setters can select
+            # manual exposure and clamp the automatic-time sentinel to minimum.
             self.deadline.start(4500)
             self.camera.start()
         except (OSError, RuntimeError):
@@ -96,6 +94,19 @@ class Snapshot(QObject):
         self.done = True
         self.deadline.stop()
         self.warmup.stop()
+        # Leave the native capture callback before stopping or detaching devices.
+        QTimer.singleShot(0, lambda: self._release(path, error))
+
+    def _release(self, path, error: str):
+        try:
+            if self.camera is not None:
+                self.camera.stop()
+            if self.session is not None:
+                self.session.setImageCapture(None)
+                self.session.setVideoSink(None)
+                self.session.setCamera(None)
+        except RuntimeError:
+            path, error = None, "Could not release the camera cleanly. Sending a text-only alert."
         try:
             if path:
                 os.chmod(path, 0o600)
@@ -103,8 +114,7 @@ class Snapshot(QObject):
             path, error = None, "The camera photo could not be saved privately. Sending a text-only alert."
         sys.stdout.buffer.write(encode("photo", path=path, error=error))
         sys.stdout.buffer.flush()
-        # Do not stop or detach the camera from inside a native capture callback.
-        QTimer.singleShot(0, self.application.quit)
+        self.application.quit()
 
 
 def main() -> int:

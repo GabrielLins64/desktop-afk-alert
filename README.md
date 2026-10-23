@@ -76,10 +76,11 @@ shutdown while that dialogue remains open.
 - **Camera:** select a device and a writable directory. Photos default to your
   system Pictures directory under `desktop-afk-alert/`. Camera access starts only
   after an incident and is limited to five seconds, including a two-second warmup
-  after the first video frame so automatic exposure can settle. Capture runs in a
-  separate user process; camera failures leave the warning screen active. The
-  saved photo appears beneath the warning on every monitor. If capture fails,
-  protection continues and alerts are sent without a photo.
+  after the first video frame so automatic exposure can settle. Capture preserves
+  the device's exposure settings and releases the camera before reporting success.
+  It runs in a separate user process; camera failures leave the warning screen
+  active. The saved photo appears beneath the warning on every monitor. If capture
+  fails, protection continues and alerts are sent without a photo.
 - **Discord:** create a webhook in the destination text channel's integrations
   settings, then paste its URL. Forum/media channels require a webhook URL that
   already includes the destination `thread_id` query parameter. Mentions are

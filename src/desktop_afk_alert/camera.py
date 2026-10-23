@@ -23,6 +23,7 @@ class CameraCapture(QObject):
         self.process = None
         self.path = ""
         self.buffer = bytearray()
+        self.result = None
         self.generation = 0
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
@@ -58,7 +59,7 @@ class CameraCapture(QObject):
             process.closeWriteChannel()
 
     def _read(self, process, generation: int):
-        if generation != self.generation:
+        if generation != self.generation or self.result is not None:
             return
         self.buffer.extend(bytes(process.readAllStandardOutput()))
         if len(self.buffer) > MAX_MESSAGE_BYTES:
@@ -77,7 +78,9 @@ class CameraCapture(QObject):
         except (OSError, ValueError, TypeError, KeyError):
             self._finish(None, "The camera photo could not be read or saved privately. Sending a text-only alert.")
             return
-        self._finish(path, error)
+        # Wait for normal exit so Qt can finish releasing the camera. Completing
+        # here would kill the worker while its native objects are still alive.
+        self.result = (path, error)
 
     def _error(self, process, error, generation: int):
         if generation == self.generation and error == QProcess.ProcessError.FailedToStart:
@@ -88,7 +91,10 @@ class CameraCapture(QObject):
         if generation == self.generation:
             self._read(process, generation)
             if generation == self.generation:
-                self._finish(None, "Camera capture stopped unexpectedly. Protection remains active; sending a text-only alert.")
+                if self.result is not None and process.exitStatus() == QProcess.ExitStatus.NormalExit and process.exitCode() == 0:
+                    self._finish(*self.result)
+                else:
+                    self._finish(None, "Camera capture stopped unexpectedly. Protection remains active; sending a text-only alert.")
         process.deleteLater()
 
     def _finish(self, path, error: str):
@@ -99,6 +105,7 @@ class CameraCapture(QObject):
         self.generation += 1
         self.timer.stop()
         self.buffer.clear()
+        self.result = None
         process, self.process = self.process, None
         if process is not None and process.state() != QProcess.ProcessState.NotRunning:
             process.kill()
