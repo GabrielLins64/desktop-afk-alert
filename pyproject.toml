@@ -20,7 +20,7 @@ classifiers = [
 dependencies = [
   "PySide6-Essentials>=6.8,<7",
   "PySide6-Addons>=6.8,<7",
-  "evdev>=1.9,<2",
+  "evdev>=1.9,<3",
   "pyudev>=0.24,<1",
   "httpx>=0.28,<1",
   "keyring>=25,<27",
@@ -34,7 +34,7 @@ desktop-afk-alert = "desktop_afk_alert.app:main"
 
 [dependency-groups]
 build = ["Nuitka>=2.7,<5", "ordered-set>=4,<5", "zstandard>=0.23,<1", "patchelf>=0.17,<1"]
-helper = ["evdev>=1.9,<2", "pyudev>=0.24,<1"]
+helper = ["evdev>=1.9,<3", "pyudev>=0.24,<1"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/desktop_afk_alert"]

@@ -24,7 +24,7 @@ def installed_helper() -> str:
         if not os.access(resolved, os.X_OK):
             raise RuntimeError("The installed helper is not executable.")
         return str(path)
-    raise RuntimeError("Install the .deb/.rpm package, or run scripts/install-dev-helper.sh, before activating protection.")
+    raise RuntimeError("Install the distribution package, or run scripts/install-dev-helper.sh, before activating protection.")
 
 
 class HelperClient(QObject):

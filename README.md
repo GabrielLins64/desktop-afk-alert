@@ -28,6 +28,34 @@ sudo dnf install ./desktop-afk-alert-0.1.0-1.x86_64.rpm
 Use the filename of the release you downloaded. Open **Desktop AFK Alert** from
 your application menu, or run `desktop-afk-alert` as your normal user.
 
+### Arch Linux
+
+Install the build tools on an up-to-date Arch system, then build and install from
+the repository root as your normal user:
+
+```bash
+sudo pacman -Syu --needed base-devel git
+git clone https://github.com/GabrielLins64/desktop-afk-alert.git
+cd desktop-afk-alert
+makepkg -sif
+```
+
+If you already have a checkout, run `makepkg -sif` there. It packages the current
+local sources, installs missing dependencies with pacman, and asks for sudo to
+install the package. Open **Desktop AFK Alert** from your application menu, or run
+`desktop-afk-alert` as your normal user.
+
+The Arch package uses system Python, Qt, and Python dependencies from the official
+repositories. It includes the helper at `/usr/libexec/desktop-afk-alert-helper`;
+neither uv nor `scripts/install-dev-helper.sh` is needed. Build files stay under
+`build/makepkg/` unless you configured a custom `BUILDDIR` in `makepkg.conf`.
+
+Install the desktop portal backend for your desktop (`xdg-desktop-portal-gnome`
+or `xdg-desktop-portal-kde`) and a Secret Service provider such as `gnome-keyring`
+or `kwallet` to remember alert credentials.
+
+### Desktop requirements
+
 The initial targets are GNOME and KDE, using native X11 or Wayland, on Linux with
 glibc 2.39 or later. An active local desktop session, `sudo` privileges, and a
 password-based account are required. A Secret Service keyring is needed to
@@ -225,7 +253,8 @@ required. The app never changes sudoers, starts at login, or runs a persistent
 system service.
 
 Uninstall with `sudo apt remove desktop-afk-alert` or
-`sudo dnf remove desktop-afk-alert`. User settings, keyring entries, and photos
+`sudo dnf remove desktop-afk-alert`; on Arch, use
+`sudo pacman -Rns desktop-afk-alert`. User settings, keyring entries, and photos
 remain yours. For a source-only helper, remove
 `/usr/local/libexec/desktop-afk-alert-helper` and
 `/usr/local/lib/desktop-afk-alert-helper` after disarming and closing the app.

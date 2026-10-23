@@ -10,3 +10,5 @@ dist/
 *.log
 *.rpm
 *.deb
+*.pkg.tar.*
+*.src.tar.*

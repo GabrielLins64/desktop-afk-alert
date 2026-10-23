@@ -15,6 +15,7 @@ each run. An implementation target is not a verified compatibility claim.
 | Ubuntu 24.04+, GNOME, Wayland | Pending | Pending | Pending | Container checks passed |
 | Fedora 41+, KDE, X11 | Pending | Pending | Pending | Container checks passed |
 | Fedora 41+, KDE, Wayland | Pending | Pending | Pending | Container checks passed |
+| Arch Linux rolling, GNOME/KDE, X11/Wayland | Pending | Pending | Pending | Container checks passed |
 
 ## Checks completed for 0.1.0
 
@@ -26,6 +27,12 @@ each run. An implementation target is not a verified compatibility claim.
 - `.deb` and `.rpm` dependency resolution, installation, local package-revision
   upgrade, reinstallation, and removal were exercised. User configuration markers
   survived removal. Required shared-library dependencies were checked.
+- On a clean Arch Linux container, `makepkg -sif --noconfirm` installed the
+  dependencies, built the local checkout, and installed the resulting package.
+  The installed GUI started with Qt's offscreen backend outside the checkout;
+  the helper launcher, lookup, icon, root ownership, removal, and reinstallation
+  were checked. A user configuration marker survived removal. Clean builds with
+  `makepkg -C` and a custom `BUILDDIR` preserved the checkout's `src/` directory.
 - Correct and incorrect passwords were accepted/rejected by the real `sudo` PAM
   service using a temporary Ubuntu container account. The source helper installer
   and its relocated, root-owned Python environment were also exercised.
@@ -117,6 +124,6 @@ above must be completed before claiming a fully validated release.
 - Save/reopen settings and credentials. Check locked/unavailable keyrings and
   current-run-only credentials. Verify no credentials or sudo passwords appear
   in settings, logs, or process arguments.
-- Install, launch, upgrade, and uninstall `.deb` and `.rpm` packages. Confirm
+- Install, launch, upgrade, and uninstall `.deb`, `.rpm`, and Arch packages. Confirm
   root ownership, desktop launcher/icon, helper lookup, preserved user data, and
   successful launch without a development checkout or Python environment.

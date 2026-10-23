@@ -33,6 +33,9 @@ version when incompatible.
 ## Releases
 
 Update the version in `pyproject.toml` and `src/desktop_afk_alert/__init__.py`, then
-refresh `uv.lock`. Build on Ubuntu 24.04 x86-64, complete the manual validation
+refresh `uv.lock`. Keep `pkgver` in the root `PKGBUILD` in sync and reset `pkgrel`
+to `1` for a new version; increment `pkgrel` for Arch packaging-only updates.
+Validate the Arch package with `makepkg -sif` from the checkout root.
+Build on Ubuntu 24.04 x86-64, complete the manual validation
 matrix, and push a matching `vX.Y.Z` tag. Actions creates a draft release. Check
 package installation, upgrade, removal, notices, and checksums before publishing.

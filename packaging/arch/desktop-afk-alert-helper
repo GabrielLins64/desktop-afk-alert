@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/python -I -m desktop_afk_alert.helper "$@"
