@@ -1,6 +1,6 @@
 # Build the working checkout with makepkg from the repository root.
 pkgname=desktop-afk-alert
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 pkgdesc='Keep your desktop visible. Warn unexpected visitors.'
 arch=('any')

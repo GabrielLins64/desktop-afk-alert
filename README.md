@@ -19,10 +19,10 @@ the GUI, its Python runtime, and an isolated privileged helper.
 
 ```bash
 # Ubuntu 22.04+ / compatible Debian-based distributions
-sudo apt install ./desktop-afk-alert_0.1.1-2_amd64.deb
+sudo apt install ./desktop-afk-alert_0.1.2-2_amd64.deb
 
 # Fedora 41+
-sudo dnf install ./desktop-afk-alert-0.1.1-2.x86_64.rpm
+sudo dnf install ./desktop-afk-alert-0.1.2-2.x86_64.rpm
 ```
 
 Use the filename of the release you downloaded. Open **Desktop AFK Alert** from
