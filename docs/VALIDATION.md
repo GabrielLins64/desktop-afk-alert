@@ -11,11 +11,37 @@ each run. An implementation target is not a verified compatibility claim.
 
 | Environment | Full activation/release | Monitor/device changes | Camera/alerts | Package lifecycle |
 | --- | --- | --- | --- | --- |
+| Ubuntu 22.04, GNOME, X11 | Pending | Pending | Pending | Pending |
+| Ubuntu 22.04, GNOME, Wayland | Pending | Pending | Pending | Pending |
 | Ubuntu 24.04+, GNOME, X11 | Pending | Pending | Pending | Container checks passed |
 | Ubuntu 24.04+, GNOME, Wayland | Pending | Pending | Pending | Container checks passed |
 | Fedora 41+, KDE, X11 | Pending | Pending | Pending | Container checks passed |
 | Fedora 41+, KDE, Wayland | Pending | Pending | Pending | Container checks passed |
 | Arch Linux rolling, GNOME/KDE, X11/Wayland | Pending | Pending | Pending | Container checks passed |
+
+## Checks completed for 0.1.1-2
+
+- Reproduced the installed `0.1.1-1` startup failure on Ubuntu 22.04.5 with glibc
+  2.35: the GUI and helper required `GLIBC_2.38`, and the package depended on glibc
+  2.39 and the Ubuntu 24.04-only `libglib2.0-0t64` package.
+- Built both standalone applications and the `.deb`/`.rpm` packages in the Ubuntu
+  22.04 container with managed Python 3.11.13. All 99 bundled ELF files required
+  at most glibc 2.34; the package declares the build baseline of glibc 2.35.
+  Both the GUI's `--version` and the helper's `--help` succeeded on Ubuntu 22.04.
+- GUI startup passed with Qt's offscreen backend on Ubuntu 22.04. The application
+  remained in its event loop until the eight-second validation timeout, with
+  isolated settings and no activation, camera capture, or notification delivery.
+- An APT simulation using `--fix-broken` accepted the local `.deb` as a direct
+  upgrade from the unpacked `0.1.1-1` installation, with no additional packages
+  installed or removed. The simulation without that flag refused to proceed
+  because of the previous package's unmet dependencies.
+- Package metadata, root ownership and executable modes of both binaries and
+  launchers, both package checksums, shell syntax, and workflow/package YAML
+  parsing passed. No automated tests, linters, or formatters were added or run.
+
+Actual package installation, clean Ubuntu 22.04/24.04 package lifecycle checks,
+and application-menu startup on X11/Wayland remain pending for this revision.
+The container lifecycle results below describe earlier builds.
 
 ## Checks completed for 0.1.0
 

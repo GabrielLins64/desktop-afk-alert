@@ -18,11 +18,11 @@ Download the x86-64 `.deb` or `.rpm` from [Releases](../../releases). Packages i
 the GUI, its Python runtime, and an isolated privileged helper.
 
 ```bash
-# Ubuntu 24.04+ / compatible Debian-based distributions
-sudo apt install ./desktop-afk-alert_0.1.0-1_amd64.deb
+# Ubuntu 22.04+ / compatible Debian-based distributions
+sudo apt install ./desktop-afk-alert_0.1.1-2_amd64.deb
 
 # Fedora 41+
-sudo dnf install ./desktop-afk-alert-0.1.0-1.x86_64.rpm
+sudo dnf install ./desktop-afk-alert-0.1.1-2.x86_64.rpm
 ```
 
 Use the filename of the release you downloaded. Open **Desktop AFK Alert** from
@@ -57,7 +57,7 @@ or `kwallet` to remember alert credentials.
 ### Desktop requirements
 
 The initial targets are GNOME and KDE, using native X11 or Wayland, on Linux with
-glibc 2.39 or later. An active local desktop session, `sudo` privileges, and a
+glibc 2.35 or later. An active local desktop session, `sudo` privileges, and a
 password-based account are required. A Secret Service keyring is needed to
 remember alert credentials. See [validation status](docs/VALIDATION.md) for the
 environments actually checked before treating a build as release-ready.
@@ -173,6 +173,8 @@ headers needed to compile `evdev`. It does not import the
 checkout as root. Re-run it after changing helper code. Distribution packages use
 `/usr/libexec/desktop-afk-alert-helper` and take precedence over a development
 helper. Disarm and close the application before replacing either installation.
+On Ubuntu 22.04, use the distribution package: the development helper installer
+requires system Python 3.11+, while Ubuntu 22.04 provides Python 3.10 by default.
 
 To inspect your environment without activating protection:
 
@@ -184,7 +186,7 @@ The GUI opens without an installed helper; activation requires one.
 
 ## Build releases
 
-Use Ubuntu 24.04 x86-64 for the glibc baseline. Install the source dependencies,
+Use Ubuntu 22.04 x86-64 for the glibc 2.35 baseline. Install the source dependencies,
 `patchelf`, and [nFPM](https://nfpm.goreleaser.com/docs/install/), then:
 
 ```bash
@@ -192,7 +194,7 @@ scripts/build.sh
 scripts/package.sh
 ```
 
-Alternatively, build in an isolated Ubuntu 24.04 container using Podman:
+Alternatively, build in an isolated Ubuntu 22.04 container using Podman:
 
 ```bash
 scripts/build-container.sh
@@ -201,6 +203,9 @@ scripts/build-container.sh
 Set `CONTAINER_ENGINE=docker` to use Docker. The build container has no access to
 your input devices, camera, credentials, or desktop session. A native Fedora
 build using uv-managed Python may additionally need `libatomic-static`.
+Building on a newer distribution raises the minimum glibc required by the binaries;
+changing package dependency metadata cannot make those binaries run on older hosts.
+The container bundles Python 3.11 independently of Ubuntu 22.04's system Python.
 
 Nuitka produces separate standalone GUI and helper directories under `build/`.
 nFPM writes `.deb`, `.rpm`, and `SHA256SUMS` files under `dist/`. Dependencies are
@@ -214,6 +219,14 @@ Review the manual validation matrix before publishing.
 
 ## Troubleshooting and limits
 
+- **Nothing happens when opening the application:** run `desktop-afk-alert` in a
+  terminal to see startup errors. A `GLIBC_2.38 not found` error on Ubuntu 22.04
+  means the package was compiled on a newer distribution. Install a package built
+  with the Ubuntu 22.04 baseline; builds made with the previous Ubuntu 24.04
+  baseline cannot run there. Install with `sudo apt install ./<downloaded-file>.deb`
+  so dependencies are resolved; `dpkg -i` alone can leave the package unconfigured.
+  If the earlier package has already left unmet dependencies, install the corrected
+  file with `sudo apt --fix-broken install ./<downloaded-file>.deb`.
 - **An alert was not delivered:** check the log file above. Connection failures
   include their error type; provider rejections include HTTP and API error codes.
   For Discord, check that the webhook still exists and has access to the channel.

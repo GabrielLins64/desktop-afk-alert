@@ -23,4 +23,4 @@ fi
 mv "$export_dir/gui/gui_entry.dist" build/gui/
 mv "$export_dir/helper/helper_entry.dist" build/helper/
 echo "Previous standalone directories are preserved under $export_dir."
-echo 'Ubuntu 24.04 standalone builds and packages are ready in build/ and dist/.'
+echo 'Ubuntu 22.04 standalone builds and packages are ready in build/ and dist/.'
