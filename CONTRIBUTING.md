@@ -19,6 +19,33 @@ Do not add automated tests unless explicitly requested. Do not run linters or
 formatters. Existing tests may be run when present. Use syntax/import checks,
 normal builds, visual inspection, and the [manual validation guide](docs/VALIDATION.md).
 
+## Native dependencies
+
+Run `scripts/install-deps.sh` before source setup or standalone compilation on
+Ubuntu, Debian, or Fedora. Use `--dry-run` to inspect its package-manager commands.
+The installer is the single source for native source/build dependencies; the
+Ubuntu release container and GitHub Actions call it directly. uv and nFPM remain
+separate tool installations. Arch source packages declare their dependencies in
+`PKGBUILD`; Python dependencies belong in `pyproject.toml` and `uv.lock`.
+
+When a missing header, library, or compiler breaks setup or compilation, identify
+the distribution package and update the shared installer in the same change.
+Keep the README, relevant error messages, and validation notes aligned. A clearer
+error or a manual package-install instruction alone does not fix provisioning.
+Keep distribution package lists out of the workflow and Containerfile.
+
+For `cannot find -l:libatomic.a`, retain `libatomic-static` in Fedora's package
+list. Nuitka reads `-l:libatomic.a` from uv-managed Python's `MODLIBS`; the
+installed shared `libatomic.so` cannot satisfy this explicit archive request.
+On Ubuntu and Debian, `build-essential` pulls in GCC's development libraries.
+Do not rename a shared library to `.a`, create fake archives, or edit the managed
+Python installation to bypass the requirement.
+
+Validate package installation in disposable containers for affected distributions,
+rerun the installer to check repeatability, and compile the affected target. Use
+the real installer and build scripts; do not add automated tests unless requested.
+Record completed checks and pending coverage in [validation](docs/VALIDATION.md).
+
 ## Pull requests
 
 Describe the problem, resulting behavior, environments checked, and remaining

@@ -10,6 +10,31 @@ if [[ "$(uname -m)" != x86_64 ]]; then
 fi
 
 uv sync --frozen --group build --group helper
+
+uv run --no-sync python - <<'PY'
+import os
+import shlex
+import subprocess
+import sysconfig
+from pathlib import Path
+
+if "-l:libatomic.a" in (sysconfig.get_config_var("MODLIBS") or "").split():
+    compiler = shlex.split(os.environ.get("CC") or "gcc")
+    try:
+        archive = subprocess.check_output(
+            [*compiler, "-print-file-name=libatomic.a"], text=True
+        ).strip()
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise SystemExit(f"Cannot check libatomic.a with {shlex.join(compiler)}: {error}")
+    if archive == "libatomic.a" or not Path(archive).is_file():
+        raise SystemExit(
+            "Cannot build: this Python requires libatomic.a, but the C compiler cannot find it.\n"
+            "Run scripts/install-deps.sh to install the native build dependencies,\n"
+            "then re-run scripts/build.sh. For release builds, you can also use\n"
+            "scripts/build-container.sh with the Ubuntu 22.04 toolchain."
+        )
+PY
+
 mkdir -p build/helper build/gui dist
 build_jobs="${BUILD_JOBS:-2}"
 

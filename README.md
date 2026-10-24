@@ -143,27 +143,23 @@ webhook URLs, bot tokens, passwords, and notification bodies are excluded.
 ## Run from source
 
 Install Python 3.11+ and [uv](https://docs.astral.sh/uv/getting-started/installation/),
-then install the native libraries and compiler:
+then run the shared native dependency installer from the checkout:
 
 ```bash
-# Ubuntu 24.04
-sudo apt install python3-dev python3-venv build-essential linux-libc-dev libffi-dev libwayland-dev \
-  libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-shape0 libxrandr2 libegl1 libgl1 libdbus-1-3 \
-  libasound2t64 libgssapi-krb5-2 xdg-desktop-portal
-
-# Fedora
-sudo dnf install python3-devel python3-pip gcc kernel-headers libffi-devel wayland-devel \
-  libxkbcommon libxkbcommon-x11 xcb-util-cursor mesa-libGL mesa-libEGL \
-  dbus-libs krb5-libs libXrandr xdg-desktop-portal
-```
-
-From the checkout:
-
-```bash
+scripts/install-deps.sh
 uv sync --frozen
 scripts/install-dev-helper.sh
 uv run desktop-afk-alert
 ```
+
+The dependency installer supports Ubuntu, Debian, and Fedora. It installs the
+compiler, system Python headers, native GUI libraries, and standalone-build
+dependencies, including `libatomic-static` on Fedora. It requests sudo only for
+package-manager commands, also runs as root in containers, and is safe to rerun
+after updating the checkout. Use `scripts/install-deps.sh --dry-run` to inspect
+the commands without installing anything. Install uv separately; nFPM is only
+needed for packaging.
+Arch Linux uses the [makepkg installation](#arch-linux) above.
 
 The helper installer asks for sudo and copies the wheel and only its two helper
 dependencies into root-owned storage under `/usr/local`. It uses `/usr/bin/python3`,
@@ -186,13 +182,21 @@ The GUI opens without an installed helper; activation requires one.
 
 ## Build releases
 
-Use Ubuntu 22.04 x86-64 for the glibc 2.35 baseline. Install the source dependencies,
-`patchelf`, and [nFPM](https://nfpm.goreleaser.com/docs/install/), then:
+Use Ubuntu 22.04 x86-64 for the glibc 2.35 baseline. Install
+[uv](https://docs.astral.sh/uv/getting-started/installation/) and
+[nFPM](https://nfpm.goreleaser.com/docs/install/), then prepare the native
+dependencies, build, and package:
 
 ```bash
+scripts/install-deps.sh
 scripts/build.sh
 scripts/package.sh
 ```
+
+Local setup, the build container, and GitHub Actions use the same native package
+lists in `scripts/install-deps.sh`. The installer includes Fedora's static
+libatomic archive required by Nuitka with uv-managed Python. The build script
+checks that archive before compiling when the active Python requires it.
 
 Alternatively, build in an isolated Ubuntu 22.04 container using Podman:
 
@@ -201,8 +205,7 @@ scripts/build-container.sh
 ```
 
 Set `CONTAINER_ENGINE=docker` to use Docker. The build container has no access to
-your input devices, camera, credentials, or desktop session. A native Fedora
-build using uv-managed Python may additionally need `libatomic-static`.
+your input devices, camera, credentials, or desktop session.
 Building on a newer distribution raises the minimum glibc required by the binaries;
 changing package dependency metadata cannot make those binaries run on older hosts.
 The container bundles Python 3.11 independently of Ubuntu 22.04's system Python.
@@ -219,6 +222,16 @@ Review the manual validation matrix before publishing.
 
 ## Troubleshooting and limits
 
+- **Build reports `cannot find -l:libatomic.a`:** run `scripts/install-deps.sh`,
+  then retry `scripts/build.sh`. The installer includes Fedora's
+  `libatomic-static`; having `libatomic.so` installed is insufficient because
+  Nuitka reads an explicit static archive requirement from uv-managed Python.
+  If another native build dependency is missing, fix the package list in the
+  shared installer so local setup, containers, and CI receive the same fix.
+  See [dependency maintenance](CONTRIBUTING.md#native-dependencies).
+- **uv reports a failed hardlink:** the cache and checkout can reside on different
+  filesystems. uv falls back to copying; this warning does not cause the libatomic
+  link failure. Set `UV_LINK_MODE=copy` to suppress it when this layout is intentional.
 - **Nothing happens when opening the application:** run `desktop-afk-alert` in a
   terminal to see startup errors. A `GLIBC_2.38 not found` error on Ubuntu 22.04
   means the package was compiled on a newer distribution. Install a package built
@@ -232,9 +245,8 @@ Review the manual validation matrix before publishing.
   For Discord, check that the webhook still exists and has access to the channel.
   Forum/media channels also need a `thread_id` in the webhook URL. Delivery uses
   at most three attempts and never stops protection.
-- **Helper installation reports missing `Python.h`:** install the headers for
-  `/usr/bin/python3`: `sudo dnf install python3-devel` on Fedora, or
-  `sudo apt install python3-dev` on Ubuntu. Then re-run
+- **Helper installation reports missing `Python.h`:** run
+  `scripts/install-deps.sh` to install the headers for `/usr/bin/python3`, then re-run
   `scripts/install-dev-helper.sh`. Headers from uv or another virtual environment
   cannot replace the system Python headers used by the helper.
 - **Cannot activate:** run `--diagnose`; check that the helper is installed and

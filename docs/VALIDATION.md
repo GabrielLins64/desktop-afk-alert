@@ -19,6 +19,43 @@ each run. An implementation target is not a verified compatibility claim.
 | Fedora 41+, KDE, Wayland | Pending | Pending | Pending | Container checks passed |
 | Arch Linux rolling, GNOME/KDE, X11/Wayland | Pending | Pending | Pending | Container checks passed |
 
+## Native dependency changes
+
+Use `scripts/install-deps.sh` for native source/build prerequisites. Local setup,
+the Ubuntu release Containerfile, and GitHub Actions share this installer. When
+a dependency failure recurs, update its distribution package list and the setup
+and troubleshooting docs together; a manual package command or an early error
+check alone is insufficient.
+
+In clean containers for the affected distributions, run the installer twice,
+confirm the required header or archive is available, then compile the affected
+target with the project's build script. For the uv/Nuitka libatomic failure,
+check `gcc -print-file-name=libatomic.a`, build with
+`scripts/build.sh --helper-only`, and run the resulting helper with `--help`.
+Fedora needs `libatomic-static`; a shared `libatomic.so` is insufficient.
+On Ubuntu 24.04+ and Debian 13+, also check the time64 ALSA/GLib package names.
+Keep installation/build logs under ignored `build/` and record the actual
+distributions and targets checked. These provisioning checks do not replace the
+desktop release matrix or a complete GUI/package build.
+
+### Checks completed on 2026-10-24
+
+- The shared installer installed all declared packages in clean Ubuntu 22.04
+  and 24.04 containers. A second run installed no additional packages, and GCC
+  found a real `libatomic.a` archive in both environments. Ubuntu 24.04 resolved
+  `libasound2t64` and `libglib2.0-0t64` successfully.
+- In a clean Fedora 41 container, installation and a second run succeeded with
+  `libatomic-static-14.3.1-4.fc41.x86_64`. Using managed Python 3.13.6, Nuitka
+  4.3.1, and GCC 14, `scripts/build.sh --helper-only` linked the 43 C files
+  successfully. The generated standalone helper's `--help` exited successfully.
+- Shell syntax, the helper installer's Python syntax, and workflow YAML parsing
+  passed. The non-root dry run on Fedora printed the package-manager command
+  with sudo and `libatomic-static`; it did not change the host's packages.
+
+Debian provisioning, a full GUI/package rebuild, and execution of the GitHub
+Actions workflow remain unverified for this dependency change. No automated
+tests, linters, or formatters were added or run.
+
 ## Checks completed for 0.1.1-2
 
 - Reproduced the installed `0.1.1-1` startup failure on Ubuntu 22.04.5 with glibc

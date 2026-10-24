@@ -1,7 +1,6 @@
 """Install a development helper into root-owned storage; never import the checkout as root."""
 
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -28,22 +27,13 @@ def check_build_prerequisites():
     if not missing:
         return
 
-    try:
-        distribution = platform.freedesktop_os_release()
-    except OSError:
-        distribution = {}
-    families = {distribution.get("ID", ""), *distribution.get("ID_LIKE", "").split()}
-    if families & {"fedora", "rhel", "centos"}:
-        install = "sudo dnf install python3-devel python3-pip gcc kernel-headers"
-    elif families & {"ubuntu", "debian"}:
-        install = "sudo apt install python3-dev python3-venv build-essential linux-libc-dev"
-    else:
-        install = "Install the system Python development headers, GCC, and Linux input headers."
     raise SystemExit(
         "Cannot build the privileged helper dependencies:\n"
         + "\n".join(f"  - Missing: {item}" for item in missing)
         + f"\n\nThe helper uses {sys.executable}, independently of uv's Python environment.\n"
-        + f"Install the native prerequisites, then re-run scripts/install-dev-helper.sh:\n  {install}"
+        + "Run scripts/install-deps.sh to install the native prerequisites on Ubuntu, Debian, or Fedora,\n"
+        + "then re-run scripts/install-dev-helper.sh. On other distributions, install the\n"
+        + "system Python development headers, GCC, and Linux input headers with your package manager."
     )
 
 
