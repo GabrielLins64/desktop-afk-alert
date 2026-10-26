@@ -205,12 +205,20 @@ class NativeKeyboard:
 
             try:
                 configured = sources("sources")
-                recent = sources("mru-sources")
-                if recent and recent[0][0] == "xkb":
-                    xkb_sources = [source for source in configured if source[0] == "xkb"]
-                    selected = xkb_sources.index(recent[0])
-                    if 0 <= selected < count and len(xkb_sources) == count:
-                        return selected
+                xkb_sources = [source for source in configured if source[0] == "xkb"]
+                # GNOME appends a layout for UI mnemonics. It is not an input source.
+                # Larger source lists use multiple keymaps, so their indices cannot
+                # be used directly as layout groups in the current keymap.
+                if (
+                    len(xkb_sources) == len(configured)
+                    and 1 <= len(xkb_sources) <= 3
+                    and count in (len(xkb_sources), len(xkb_sources) + 1)
+                ):
+                    if len(xkb_sources) == 1:
+                        return 0
+                    recent = sources("mru-sources")
+                    if recent and recent[0] in xkb_sources:
+                        return xkb_sources.index(recent[0])
             except (OSError, ValueError, SyntaxError, subprocess.SubprocessError):
                 pass
         raise RuntimeError("Could not identify the active keyboard layout. Select a single XKB keyboard layout in your desktop settings before activating.")

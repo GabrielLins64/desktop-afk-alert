@@ -2,7 +2,7 @@ name: desktop-afk-alert
 arch: amd64
 platform: linux
 version: ${VERSION}
-release: 2
+release: 1
 section: utils
 priority: optional
 maintainer: desktop-afk-alert contributors

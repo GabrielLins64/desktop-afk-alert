@@ -19,10 +19,10 @@ the GUI, its Python runtime, and an isolated privileged helper.
 
 ```bash
 # Ubuntu 22.04+ / compatible Debian-based distributions
-sudo apt install ./desktop-afk-alert_0.1.2-2_amd64.deb
+sudo apt install ./desktop-afk-alert_0.1.3-1_amd64.deb
 
 # Fedora 41+
-sudo dnf install ./desktop-afk-alert-0.1.2-2.x86_64.rpm
+sudo dnf install ./desktop-afk-alert-0.1.3-1.x86_64.rpm
 ```
 
 Use the filename of the release you downloaded. Open **Desktop AFK Alert** from
@@ -261,7 +261,11 @@ Review the manual validation matrix before publishing.
   are rejected before activation.
 - **Unexpected keyboard layout:** select an XKB keyboard source. Wayland with
   multiple sources requires GNOME or KDE's active-layout information; activation
-  is refused when it cannot be determined. IBus/IME password input is unsupported.
+  is refused when it cannot be determined. GNOME may include an extra layout for
+  interface shortcuts; this does not count as a configured input source. A single
+  GNOME XKB source works even when its recent-source history is empty. If layout
+  detection fails with multiple GNOME sources, select a single XKB source before
+  activating. IBus/IME password input is unsupported.
 - **No saved credentials:** unlock the Secret Service keyring, or re-enter the
   credentials for this run. Plaintext storage is never used as a fallback.
 - **Protection stops:** device-grab failures, session changes, lost desktop

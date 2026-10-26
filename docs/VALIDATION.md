@@ -19,6 +19,21 @@ each run. An implementation target is not a verified compatibility claim.
 | Fedora 41+, KDE, Wayland | Pending | Pending | Pending | Container checks passed |
 | Arch Linux rolling, GNOME/KDE, X11/Wayland | Pending | Pending | Pending | Container checks passed |
 
+## Keyboard layout checks completed on 2026-10-26
+
+- Reproduced the activation preflight error on Ubuntu 22.04.5, GNOME Shell 42.9,
+  Wayland: GNOME configured only `('xkb', 'br')`, with an empty `mru-sources`
+  list, while the compositor supplied Brazilian and US layout groups.
+- After the correction, source `--diagnose` exited successfully and reported
+  `Portuguese (Brazil)` using both Qt's native Wayland backend and its XCB backend
+  through XWayland. Python syntax and diff whitespace checks passed.
+- The `0.1.3` source archive and wheel built successfully, the frozen lockfile
+  check passed, and source `--version` and `--diagnose` reported `0.1.3`.
+- No automated tests, linters, or formatters were added or run. Protection was
+  not activated and no input devices were grabbed. These local checks do not
+  cover full activation/release, multiple-source switching, KDE, or standalone
+  distribution packages.
+
 ## Native dependency changes
 
 Use `scripts/install-deps.sh` for native source/build prerequisites. Local setup,
