@@ -161,6 +161,11 @@ the commands without installing anything. Install uv separately; nFPM is only
 needed for packaging.
 Arch Linux uses the [makepkg installation](#arch-linux) above.
 
+On Python 3.11, the Python dependencies exclude PySide6 6.12.0 because its native
+bindings lose singleton references during Qt calls and can abort the interface.
+Use the frozen lockfile so local runs and standalone builds select the compatible
+PySide6 release together with its matching Shiboken runtime.
+
 The helper installer asks for sudo and copies the wheel and only its two helper
 dependencies into root-owned storage under `/usr/local`. It uses `/usr/bin/python3`,
 which also needs to be Python 3.11+, and checks its development headers and compiler

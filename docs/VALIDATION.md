@@ -34,6 +34,38 @@ each run. An implementation target is not a verified compatibility claim.
   cover full activation/release, multiple-source switching, KDE, or standalone
   distribution packages.
 
+## Qt singleton reference checks completed on 2026-10-26
+
+- The Ubuntu 22.04 system journal recorded an installed `0.1.2-2` GUI abort
+  (`SIGABRT`) while updating the warning panel, with `none_dealloc: deallocating
+  None`. Another run aborted with `bool_dealloc` during interpreter shutdown.
+- On Python 3.11.11, 100 calls to `QObject.setObjectName()` with PySide6 6.12.0
+  lost exactly 100 references to `None`. This reproduced without Nuitka or the
+  privileged helper. With PySide6 6.11.3, the same diagnostic lost no references.
+- The Python 3.11 dependency constraints now exclude PySide6 6.12.0. The frozen
+  lockfile selects Essentials, Addons, and Shiboken 6.11.3 together for that
+  interpreter; Python 3.12+ retains its existing dependency selection.
+- With Python 3.11.11 and PySide6 6.11.3, 5,000 warning updates using Qt's
+  offscreen backend left the `None`, `True`, and `False` reference counts
+  unchanged. The warning and password panel opened and dismissed successfully.
+  Source `--version`, Wayland `--diagnose`, and the lockfile check passed.
+- The shared installer, complete Nuitka GUI/helper builds, and `.deb`/`.rpm`
+  packaging succeeded in the Ubuntu 22.04 release container with managed Python
+  3.11.13. The exported GUI bundles PySide6/Shiboken 6.11.3 and passed Wayland
+  `--diagnose` on the Ubuntu 22.04.5 host.
+- The corrected `0.1.3-1` `.deb` installed successfully in a disposable Ubuntu
+  22.04 container. As a non-root user, the installed GUI reported its version
+  and remained in its offscreen event loop until the 20-second timeout; the
+  installed helper's `--help` also succeeded. A host APT simulation accepted the
+  upgrade from `0.1.2-2` without additional packages or removals. After the user
+  installed the package on the host, dpkg confirmed `0.1.3-1` was configured,
+  the installed GUI matched the rebuilt binary's SHA-256, and the installed
+  application's Wayland `--diagnose` passed.
+
+These diagnostics did not activate protection or grab input devices. Full
+activation/release and other desktop/distribution combinations remain pending.
+No automated tests, linters, or formatters were added or run.
+
 ## Native dependency changes
 
 Use `scripts/install-deps.sh` for native source/build prerequisites. Local setup,
